@@ -14,12 +14,12 @@ const resolvers = {
       const params = username ? { username } : {};
       return Book.find(params).sort({ createdAt: -1 });
     },
-    book: async (parent, { thoughtId }) => {
-      return Book.findOne({ _id: thoughtId });
+    book: async (parent, { bookId }) => {
+      return Book.findOne({ _id: bookId });
     },
     me: async (parent, args, context) => {
       if (context.user) {
-        return User.findOne({ _id: context.user._id }).populate('thoughts');
+        return User.findOne({ _id: context.user._id }).populate('books');
       }
       throw new AuthenticationError('You need to be logged in!');
     },
@@ -66,24 +66,24 @@ const resolvers = {
     },
     removeBook: async (parent, { bookId }, context) => {
       if (context.user) {
-        const thought = await Thought.findOneAndDelete({
-          _id: thoughtId,
-          thoughtAuthor: context.user.username,
+        const book = await Book.findOneAndDelete({
+          _id: bookId,
+          bookAuthor: context.user.username,
         });
 
         await User.findOneAndUpdate(
           { _id: context.user._id },
-          { $pull: { thoughts: thought._id } }
+          { $pull: { books: book._id } }
         );
 
-        return thought;
+        return book;
       }
       throw new AuthenticationError('You need to be logged in!');
     },
     removeComment: async (parent, { bookId, commentId }, context) => {
       if (context.user) {
-        return Thought.findOneAndUpdate(
-          { _id: thoughtId },
+        return Book.findOneAndUpdate(
+          { _id: bookId },
           {
             $pull: {
               comments: {
